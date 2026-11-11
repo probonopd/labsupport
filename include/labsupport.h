@@ -5,7 +5,7 @@
  */
 
 /*
- * ctlsurface: MIDI keyboard controllers with a display, used as the panel of an
+ * labsupport: MIDI keyboard controllers with a display, used as the panel of an
  * application. A model table says which device a port belongs to and what it
  * has; a decoder turns its channel messages into control events; encoders write
  * the system exclusive messages for its display and its lights.
@@ -16,8 +16,8 @@
  * what is known about its device and why its mode was chosen.
  */
 
-#ifndef CTLSURFACE_H
-#define CTLSURFACE_H
+#ifndef LABSUPPORT_H
+#define LABSUPPORT_H
 
 #include <stddef.h>
 #include <stdint.h>

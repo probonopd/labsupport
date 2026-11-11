@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
-/** A device and what it has; the twin of cs_model in ctlsurface.h. */
+/** A device and what it has; the twin of cs_model in labsupport.h. */
 public final class Model {
     public final String name;
     public final Family family;

@@ -1,5 +1,5 @@
-# Test vectors for ctlsurface, read by the C tests (tests/test_ctlsurface.c) and
-# the Java tests (java/.../CtlSurfaceTest.java), so that both implementations
+# Test vectors for labsupport, read by the C tests (tests/test_labsupport.c) and
+# the Java tests (java/.../LabSupportTest.java), so that both implementations
 # behave alike.
 #
 #   model <name>                       select a model by cs_model_by_name

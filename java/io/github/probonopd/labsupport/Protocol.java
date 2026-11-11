@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /** What a family sends and takes; the twin of cs_protocol. Writers return no bytes for what the family lacks. */
 abstract class Protocol {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /** The protocol generation of a device; models of one family differ only in size. */
 public enum Family {

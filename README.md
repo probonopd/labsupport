@@ -1,4 +1,4 @@
-# labsupport (ctlsurface)
+# labsupport
 
 Use Arturia MiniLab 3 and KeyLab keyboard controllers with a display as the
 control panel of an application. The library
@@ -30,10 +30,10 @@ its sources are and what is left out.
 
 ## Design
 
-* C99 (`include/ctlsurface.h`, `src/`): no allocation, no I/O, no clock. The
+* C99 (`include/labsupport.h`, `src/`): no allocation, no I/O, no clock. The
   caller owns the MIDI ports and passes the time in, so the code runs in a
   desktop app, a plug-in, a command line tool or on a microcontroller.
-* Java (`java/io/github/probonopd/ctlsurface/`): the same API as a twin, with no
+* Java (`java/io/github/probonopd/labsupport/`): the same API as a twin, with no
   Android dependency (plain JVM classes).
 * Both implementations are tested with the same vectors, `tests/vectors.txt`:
   device lookup, port roles, decoding, and the exact bytes of every message.
@@ -41,13 +41,13 @@ its sources are and what is left out.
 ## Using it from C or C++
 
 Add the repository as a git submodule, then either compile `src/*.c` with
-`-Iinclude` into your build, or run `make` to get `libctlsurface.a`.
+`-Iinclude` into your build, or run `make` to get `liblabsupport.a`.
 
     git submodule add https://github.com/probonopd/labsupport third_party/labsupport
 
 A complete sketch (the MIDI calls stand for your MIDI API):
 
-    #include "ctlsurface.h"
+    #include "labsupport.h"
 
     const cs_model *m = cs_model_by_name("KeyLab mkII 61");  /* or cs_model_by_usb() */
     if (!m) return;
@@ -165,7 +165,7 @@ failures. `make clean` removes the build output.
 ## Adding a device family
 
 Add `src/cs_<family>.c` (controls table, port roles, writers) and its twin
-`<Family>Protocol.java`, register the family in `include/ctlsurface.h`,
+`<Family>Protocol.java`, register the family in `include/labsupport.h`,
 `src/cs_models.c`, `Models.java` and the `Makefile` source list, and add its
 vectors to `tests/vectors.txt`. Both runners must pass.
 

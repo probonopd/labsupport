@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /** One control: a CC or note number (COUNT consecutive ones) on a channel (-1 any) and the event it is. */
 final class Control {

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /**
  * Arturia KeyLab Essential 49/61/88 (first generation, 2017) in its Analog Lab map, the map it starts in; the twin of

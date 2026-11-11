@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /**
  * Arturia KeyLab mkII 49/61/88 in its Analog Lab mode, the mode the unit starts in; the twin of cs_keylab_mk2.c, where

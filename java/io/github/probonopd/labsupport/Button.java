@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /** Buttons by what they are for; Event.index of a BUTTON is code(), as cs_button in C. */
 public enum Button {

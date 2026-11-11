@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /** What a port of a device carries for the application (bit flags); the twin of the CS_ROLE_ flags. */
 public final class Roles {

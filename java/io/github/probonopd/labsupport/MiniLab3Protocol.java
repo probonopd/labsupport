@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /**
  * Arturia MiniLab 3 in its DAW mode (Shift + Pad 3 on the device; a host cannot switch it). The display and lights

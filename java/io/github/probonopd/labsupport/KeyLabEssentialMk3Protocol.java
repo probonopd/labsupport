@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /**
  * Arturia KeyLab Essential 49/61/88 mk3 in its DAW program; the twin of cs_keylab_essential_mk3.c, where the choice,

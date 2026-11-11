@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /** Turns the channel messages of a device's control port into events; the twin of cs_decode. Not thread safe. */
 public final class Decoder {

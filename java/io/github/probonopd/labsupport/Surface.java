@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 /**
- * The system exclusive messages for a device's display and lights; the twin of the writers in ctlsurface.h. Every
+ * The system exclusive messages for a device's display and lights; the twin of the writers in labsupport.h. Every
  * method returns one or more complete messages, or no bytes when the device has no such thing; they go to the port
  * whose role is CONTROL, or MAIN when the device has no CONTROL port.
  */

@@ -6,7 +6,7 @@
 
 /* Runs tests/vectors.txt against the C library. */
 
-#include "ctlsurface.h"
+#include "labsupport.h"
 
 #include <stdio.h>
 #include <stdlib.h>

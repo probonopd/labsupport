@@ -7,7 +7,7 @@
 #ifndef CS_INTERNAL_H
 #define CS_INTERNAL_H
 
-#include "ctlsurface.h"
+#include "labsupport.h"
 
 /* One control: a CC or note number on a channel (-1 any) and the event it is. */
 typedef struct cs_control {

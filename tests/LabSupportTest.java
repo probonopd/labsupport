@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-package io.github.probonopd.ctlsurface;
+package io.github.probonopd.labsupport;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -12,8 +12,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Runs tests/vectors.txt against the Java library, as tests/test_ctlsurface.c does against the C one. */
-public final class CtlSurfaceTest {
+/** Runs tests/vectors.txt against the Java library, as tests/test_labsupport.c does against the C one. */
+public final class LabSupportTest {
     private static int failures, checks;
 
     private static List<String> tokenize(String line) {
