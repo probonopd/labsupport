@@ -1,0 +1,558 @@
+# Test vectors for ctlsurface, read by the C tests (tests/test_ctlsurface.c) and
+# the Java tests (java/.../CtlSurfaceTest.java), so that both implementations
+# behave alike.
+#
+#   model <name>                       select a model by cs_model_by_name
+#   none <name>                        cs_model_by_name finds nothing
+#   usb <vid> <pid> <model name>|none  cs_model_by_usb
+#   port <name> <roles>                cs_port_roles for the selected model: "none" or
+#                                      keys, controls, display joined by "+"
+#   cable <index> <roles>              cs_port_roles_at
+#   decode <ms> <status> <d1> <d2> -> <kind> <index> <value> <delta>
+#   connect|disconnect -> <bytes>
+#   text <line1> <line2> -> <bytes>
+#   value knob|fader <value> <line1> <line2> -> <bytes>
+#   pad <pad> <r> <g> <b> -> <bytes>
+#
+# Strings are in double quotes. <bytes> is hex, or "none" for a 0 return.
+# A decoder lives from one "model" line to the next.
+
+# ---------------------------------------------------------------- MiniLab 3
+# Bytes as an Android app sends them to a real MiniLab 3.
+
+model "Minilab3"
+none "Minilab"
+none "Launchpad X"
+none ""
+none "KeyStep 37"
+port "Arturia MiniLab 3" keys+controls+display
+port "Arturia Minilab3" keys+controls+display
+usb 1C75 220B "MiniLab 3"
+usb 1C75 020B "MiniLab 3"
+usb 1C75 1234 none
+port "Minilab3 MIDI" keys+controls+display
+port "MiniLab 3" keys+controls+display
+port "Minilab3 DIN THRU" none
+port "Minilab3 MCU/HUI" none
+port "Minilab3 ALV" none
+port "KeyStep 37" none
+cable 0 keys+controls+display
+cable 3 none
+cable 9 none
+
+connect -> F0 00 20 6B 7F 42 02 02 40 6A 21 F7
+disconnect -> F0 00 20 6B 7F 42 04 02 60 01 00 02 00 F7 F0 00 20 6B 7F 42 02 02 40 6A 20 F7
+text "" "" -> F0 00 20 6B 7F 42 04 02 60 01 00 02 00 F7
+text "Part 1" "E.Piano 1" -> F0 00 20 6B 7F 42 04 02 60 01 50 61 72 74 20 31 00 02 45 2E 50 69 61 6E 6F 20 31 00 F7
+text "Grüße" "" -> F0 00 20 6B 7F 42 04 02 60 01 47 72 3F 3F 65 00 02 00 F7
+value knob 100 "Volume" "100" -> F0 00 20 6B 7F 42 04 02 60 1F 03 01 64 00 00 01 56 6F 6C 75 6D 65 00 02 31 30 30 00 F7
+value fader 300 "Part 1 volume" "127" -> F0 00 20 6B 7F 42 04 02 60 1F 04 01 7F 00 00 01 50 61 72 74 20 31 20 76 6F 6C 75 6D 65 00 02 31 32 37 00 F7
+text "Ab" "c" -> F0 00 20 6B 7F 42 04 02 60 01 41 62 00 02 63 00 F7
+text "Été" "" -> F0 00 20 6B 7F 42 04 02 60 01 3F 74 3F 00 02 00 F7
+text "0123456789012345678901234567890123456789" "" -> F0 00 20 6B 7F 42 04 02 60 01 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 38 39 00 02 00 F7
+value knob -5 "" "" -> F0 00 20 6B 7F 42 04 02 60 1F 03 01 00 00 00 01 00 02 00 F7
+pad 0 127 0 64 -> F0 00 20 6B 7F 42 02 02 16 34 7F 00 40 F7
+pad 15 1 2 3 -> F0 00 20 6B 7F 42 02 02 16 4B 01 02 03 F7
+pad 16 1 2 3 -> none
+
+# A burst of the encoder: the first message is a step, then one per 5 of movement.
+decode 0 B0 1C 41 -> encoder 0 65 1
+decode 10 B0 1C 41 -> swallowed 0 65 0
+decode 20 B0 1C 42 -> swallowed 0 66 0
+decode 30 B0 1C 46 -> encoder 0 70 1
+decode 200 B0 1C 3F -> encoder 0 63 -1
+decode 210 B0 1C 40 -> swallowed 0 64 0
+decode 300 B0 1C 41 -> encoder 0 65 1
+decode 400 B0 76 7F -> click 0 1 0
+decode 410 B0 76 00 -> click 0 0 0
+decode 500 99 24 64 -> pad 0 100 0
+decode 510 89 24 40 -> pad 0 0 0
+decode 520 99 33 01 -> pad 15 1 0
+decode 530 99 34 64 -> none 0 0 0
+decode 540 90 24 64 -> none 0 0 0
+decode 550 B0 56 10 -> knob 0 16 0
+decode 560 B0 6F 20 -> knob 5 32 0
+decode 570 B0 75 7F -> knob 7 127 0
+decode 580 B0 0E 05 -> fader 0 5 0
+decode 590 B0 1F 06 -> fader 3 6 0
+decode 600 B1 0E 05 -> none 0 0 0
+decode 610 B0 01 40 -> none 0 0 0
+decode 620 E0 00 40 -> none 0 0 0
+decode 630 90 3C 64 -> none 0 0 0
+# A slow detent (5 messages of 65) is one step; the next detent after a pause is one more.
+decode 1000 B0 1C 41 -> encoder 0 65 1
+decode 1015 B0 1C 41 -> swallowed 0 65 0
+decode 1030 B0 1C 41 -> swallowed 0 65 0
+decode 1045 B0 1C 41 -> swallowed 0 65 0
+decode 1060 B0 1C 41 -> swallowed 0 65 0
+decode 1200 B0 1C 41 -> encoder 0 65 1
+# Counter-clockwise steps at once, also within a clockwise burst.
+decode 1210 B0 1C 3C -> encoder 0 60 -1
+# Speed counts: 6 of movement per message is one step each, the rest carries over.
+decode 3000 B0 1C 46 -> encoder 0 70 1
+decode 3010 B0 1C 46 -> encoder 0 70 1
+decode 3020 B0 1C 46 -> encoder 0 70 1
+decode 3030 B0 1C 46 -> encoder 0 70 1
+decode 3040 B0 1C 46 -> encoder 0 70 1
+decode 3050 B0 1C 46 -> encoder 0 70 2
+
+# ------------------------------------------------------------ KeyLab mkII
+# Analog Lab mode, everything on cable 0 (Arturia KeyLab mkII manual). Text lines are 16 characters padded with spaces; LED colors are 5 bit.
+
+model "KeyLab mkII 49"
+usb 1C75 024B "KeyLab mkII 49"
+port "KeyLab mkII 49 MIDI" keys+controls+display
+port "KeyLab mkII 49 DAW" none
+
+model "KeyLab mkII 61"
+usb 1C75 028B "KeyLab mkII 61"
+port "KeyLab mkII 61 MIDI" keys+controls+display
+port "KeyLab mkII 61 DAW" none
+
+model "KeyLab mkII 88"
+usb 1C75 02CB "KeyLab mkII 88"
+port "KeyLab mkII 88 MIDI" keys+controls+display
+port "KeyLab mkII 88 DAW" none
+
+none "KeyLab mkII"
+model "KeyLab 61"
+model "KeyLab mkII 61"
+port "KeyLab mkII 61 MIDI 1" keys+controls+display
+port "KeyLab mkII 61 MIDI 2" none
+port "KeyLab mkII 61" keys+controls+display
+port "KeyLab mkII 88 MIDI" none
+port "KeyLab 61 mk3 MIDI" none
+cable 0 keys+controls+display
+cable 1 none
+cable 2 none
+connect -> none
+disconnect -> F0 00 20 6B 7F 42 04 00 60 01 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+text "Part 1" "E.Piano 1" -> F0 00 20 6B 7F 42 04 00 60 01 50 61 72 74 20 31 20 20 20 20 20 20 20 20 20 20 00 02 45 2E 50 69 61 6E 6F 20 31 20 20 20 20 20 20 20 00 F7
+text "" "" -> F0 00 20 6B 7F 42 04 00 60 01 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+text "Été" "01234567890123456789" -> F0 00 20 6B 7F 42 04 00 60 01 3F 74 3F 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 00 F7
+value knob 100 "Volume" "100" -> F0 00 20 6B 7F 42 04 00 60 01 56 6F 6C 75 6D 65 20 20 20 20 20 20 20 20 20 20 00 02 31 30 30 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+pad 0 127 0 64 -> F0 00 20 6B 7F 42 02 00 16 70 1F 00 10 F7
+pad 5 40 80 127 -> F0 00 20 6B 7F 42 02 00 16 75 0A 14 1F F7
+pad 15 3 2 1 -> F0 00 20 6B 7F 42 02 00 16 7F 00 00 00 F7
+# 7-bit colors scale to the driver's 5 bits (32 would wrap to 0, so no value may exceed 31)
+pad 2 100 50 25 -> F0 00 20 6B 7F 42 02 00 16 72 19 0C 06 F7
+pad 3 127 127 127 -> F0 00 20 6B 7F 42 02 00 16 73 1F 1F 1F F7
+pad 16 1 2 3 -> none
+
+# Jog wheel: two messages per scan event, 64 then 64 +- n; Preset lit = CC 114/115, Category lit = CC 112/113.
+decode 0 B0 72 40 -> swallowed 0 64 0
+decode 1 B0 72 42 -> encoder 0 66 2
+decode 2 B0 72 40 -> swallowed 0 64 0
+decode 3 B0 72 3F -> encoder 0 63 -1
+decode 4 B0 70 41 -> encoder 0 65 1
+decode 5 B0 70 3D -> encoder 0 61 -3
+decode 6 B0 71 7F -> click 0 1 0
+decode 7 B0 71 00 -> click 0 0 0
+decode 8 B0 73 7F -> click 0 1 0
+decode 9 B0 73 00 -> click 0 0 0
+# Category 116, Preset 117, arrows 28/29, Part 1/2/Live 22/23/24 (button codes: prev 1, next 2, category 3, preset 4, part1 5, part2 6, live 7)
+decode 10 B0 74 7F -> button 3 1 0
+decode 11 B0 74 00 -> button 3 0 0
+decode 12 B0 75 7F -> button 4 1 0
+decode 13 B0 1C 7F -> button 1 1 0
+decode 14 B0 1D 7F -> button 2 1 0
+decode 15 B0 16 7F -> button 5 1 0
+decode 16 B0 17 7F -> button 6 1 0
+decode 17 B0 18 00 -> button 7 0 0
+# Select buttons: all CC 30, value ((n - 1) << 1) | pressed (select 1 is code 16, select 9 is code 24)
+decode 20 B0 1E 01 -> button 16 1 0
+decode 21 B0 1E 00 -> button 16 0 0
+decode 22 B0 1E 03 -> button 17 1 0
+decode 23 B0 1E 11 -> button 24 1 0
+decode 24 B0 1E 10 -> button 24 0 0
+decode 25 B0 1E 13 -> none 0 0 0
+# Pads: notes 36-51 on channel 10
+decode 30 99 24 64 -> pad 0 100 0
+decode 31 89 24 40 -> pad 0 0 0
+decode 32 99 33 01 -> pad 15 1 0
+decode 33 99 34 64 -> none 0 0 0
+decode 34 90 24 64 -> none 0 0 0
+# Knobs 1-9: CC 74 71 76 77 93 18 19 16 17; faders 1-9: CC 73 75 79 72 80 81 82 83 85
+decode 40 B0 4A 10 -> knob 0 16 0
+decode 41 B0 47 10 -> knob 1 16 0
+decode 42 B0 4C 10 -> knob 2 16 0
+decode 43 B0 4D 10 -> knob 3 16 0
+decode 44 B0 5D 10 -> knob 4 16 0
+decode 45 B0 12 10 -> knob 5 16 0
+decode 46 B0 13 10 -> knob 6 16 0
+decode 47 B0 10 10 -> knob 7 16 0
+decode 48 B0 11 10 -> knob 8 16 0
+decode 50 B0 49 05 -> fader 0 5 0
+decode 51 B0 4B 05 -> fader 1 5 0
+decode 52 B0 4F 05 -> fader 2 5 0
+decode 53 B0 48 05 -> fader 3 5 0
+decode 54 B0 50 05 -> fader 4 5 0
+decode 55 B0 51 05 -> fader 5 5 0
+decode 56 B0 52 05 -> fader 6 5 0
+decode 57 B0 53 05 -> fader 7 5 0
+decode 58 B0 55 05 -> fader 8 5 0
+# Keys, wheels and pedals play; CC 118 (Analog Lab mode announced) and CC 26/27 are swallowed
+decode 60 90 3C 64 -> none 0 0 0
+decode 61 E0 00 40 -> none 0 0 0
+decode 62 B0 01 40 -> none 0 0 0
+decode 63 B0 40 7F -> none 0 0 0
+decode 64 B0 0B 40 -> none 0 0 0
+decode 65 B0 76 7F -> swallowed 0 127 0
+decode 66 B0 1A 7F -> swallowed 0 127 0
+
+# ------------------------------------------------- KeyLab Essential mk3
+# DAW program, everything on cable 0 (Arturia KeyLab Essential mk3 manual and public
+# scripts; control numbers of the main encoder, buttons and pads read back from hardware).
+
+model "KL Essential 49 mk3"
+usb 1C75 024C "KeyLab Essential 49 mk3"
+port "KL Essential 49 mk3 MIDI" keys+controls+display
+
+model "KL Essential 61 mk3"
+usb 1C75 028C "KeyLab Essential 61 mk3"
+port "KL Essential 61 mk3 MIDI" keys+controls+display
+
+model "KL Essential 88 mk3"
+usb 1C75 02CC "KeyLab Essential 88 mk3"
+port "KL Essential 88 mk3 MIDI" keys+controls+display
+
+none "KL Essential"
+none "KeyLab Essential 61"
+model "KL Essential 61 mk3"
+port "KL Essential 61 mk3 DINTHRU" none
+port "KL Essential 61 mk3 MCU/HUI" none
+port "KL Essential 61 mk3 ALV" none
+port "KL Essential 49 mk3 MIDI" none
+port "KL Essential 61 mk3" keys+controls+display
+cable 0 keys+controls+display
+cable 1 none
+cable 3 none
+connect -> F0 00 20 6B 7F 42 02 0F 40 5A 01 F7 F0 00 20 6B 7F 42 21 11 40 02 00 01 F7
+disconnect -> F0 00 20 6B 7F 42 04 01 60 12 01 00 02 00 00 F7 F0 00 20 6B 7F 42 02 0F 40 5A 00 F7
+text "Part 1" "E.Piano 1" -> F0 00 20 6B 7F 42 04 01 60 12 01 50 61 72 74 20 31 00 02 45 2E 50 69 61 6E 6F 20 31 00 00 F7
+text "" "" -> F0 00 20 6B 7F 42 04 01 60 12 01 00 02 00 00 F7
+text "0123456789012345678901" "Été" -> F0 00 20 6B 7F 42 04 01 60 12 01 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 00 02 3F 74 3F 00 00 F7
+value knob 100 "Volume" "100" -> F0 00 20 6B 7F 42 04 01 60 14 01 56 6F 6C 75 6D 65 00 02 31 30 30 00 03 64 00 01 F7
+value fader 300 "Part 1 volume" "127" -> F0 00 20 6B 7F 42 04 01 60 15 01 50 61 72 74 20 31 20 76 6F 6C 75 6D 00 02 31 32 37 00 03 7F 00 01 F7
+pad 0 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 1C 7F 00 40 F7
+pad 3 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 1F 7F 00 40 F7
+pad 4 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 20 7F 00 40 F7
+pad 7 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 23 7F 00 40 F7
+pad 8 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 24 7F 00 40 F7
+pad 11 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 27 7F 00 40 F7
+pad 12 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 28 7F 00 40 F7
+pad 15 127 0 64 -> F0 00 20 6B 7F 42 04 01 16 2B 7F 00 40 F7
+pad 16 1 2 3 -> none
+# Main encoder CC 116, one message per step around 64; click CC 117
+decode 0 B0 74 41 -> encoder 0 65 1
+decode 1 B0 74 3F -> encoder 0 63 -1
+decode 2 B0 74 40 -> swallowed 0 64 0
+decode 3 B0 74 42 -> encoder 0 66 2
+decode 4 B0 74 3E -> encoder 0 62 -2
+decode 5 B0 75 7F -> click 0 1 0
+decode 6 B0 75 00 -> click 0 0 0
+# Buttons under the display CC 44-47 (soft 1-4 are codes 8-11); transport stop 20, play 21, record 22, loop 24, rewind 25, forward 26
+decode 10 B0 2C 7F -> button 8 1 0
+decode 11 B0 2F 00 -> button 11 0 0
+decode 12 B0 14 7F -> button 26 1 0
+decode 13 B0 15 7F -> button 25 1 0
+decode 14 B0 16 7F -> button 27 1 0
+decode 15 B0 18 7F -> button 28 1 0
+decode 16 B0 19 7F -> button 29 1 0
+decode 17 B0 1A 7F -> button 30 1 0
+# Knobs 1-9 CC 96-104 and faders 1-9 CC 105-113, absolute
+decode 20 B0 60 10 -> knob 0 16 0
+decode 21 B0 68 7F -> knob 8 127 0
+decode 22 B0 69 05 -> fader 0 5 0
+decode 23 B0 71 06 -> fader 8 6 0
+decode 24 B0 72 06 -> none 0 0 0
+decode 25 B0 5F 06 -> none 0 0 0
+# Pads: channel 11; bank A pads 1-8 are notes 40-43, 36-39, bank B pads 1-8 are 48-51, 44-47
+decode 30 9A 28 64 -> pad 0 100 0
+decode 33 9A 2B 64 -> pad 3 100 0
+decode 34 9A 24 64 -> pad 4 100 0
+decode 37 9A 27 64 -> pad 7 100 0
+decode 38 9A 30 64 -> pad 8 100 0
+decode 41 9A 33 64 -> pad 11 100 0
+decode 42 9A 2C 64 -> pad 12 100 0
+decode 45 9A 2F 64 -> pad 15 100 0
+decode 50 8A 28 40 -> pad 0 0 0
+decode 51 9A 34 64 -> none 0 0 0
+decode 52 9A 23 64 -> none 0 0 0
+decode 53 99 28 64 -> none 0 0 0
+# Keys play; Tap, Metronome, Save..Redo and Bank/Part are swallowed
+decode 60 90 3C 64 -> none 0 0 0
+decode 61 E0 00 40 -> none 0 0 0
+decode 62 B0 01 40 -> none 0 0 0
+decode 63 B0 17 7F -> swallowed 0 127 0
+decode 64 B0 1B 7F -> swallowed 0 127 0
+decode 65 B0 28 7F -> swallowed 0 127 0
+decode 66 B0 2B 7F -> swallowed 0 127 0
+decode 67 B0 76 7F -> swallowed 0 127 0
+decode 68 B0 77 7F -> swallowed 0 127 0
+
+# --------------------------------------------------------- KeyLab mk3
+# DAW program; cable 0 "MIDI" has the keys, cable 1 "DAW" the controls, display and lights
+# (Arturia KeyLab mk3 manual and public scripts).
+
+model "KeyLab 49 mk3"
+usb 1C75 024E "KeyLab 49 mk3"
+port "KeyLab 49 mk3 MIDI" keys
+port "KeyLab 49 mk3 DAW" controls+display
+
+model "KeyLab 61 mk3"
+usb 1C75 028E "KeyLab 61 mk3"
+port "KeyLab 61 mk3 MIDI" keys
+port "KeyLab 61 mk3 DAW" controls+display
+
+model "KeyLab 88 mk3"
+usb 1C75 02CE "KeyLab 88 mk3"
+port "KeyLab 88 mk3 MIDI" keys
+port "KeyLab 88 mk3 DAW" controls+display
+
+none "KeyLab"
+none "KeyLab mk3"
+model "KeyLab 61 mk3"
+port "KeyLab 61 mk3" keys
+port "KeyLab 88 mk3 DAW" none
+port "KeyLab mkII 61 DAW" none
+cable 0 keys
+cable 1 controls+display
+cable 2 none
+connect -> F0 00 20 6B 7F 42 00 02 05 01 F7 F0 00 20 6B 7F 42 00 02 07 01 F7
+disconnect -> F0 00 20 6B 7F 42 00 02 04 0C 00 00 01 01 00 02 7F 7F 7F 00 03 00 04 01 00 05 7F 7F 7F 00 F7 F0 00 20 6B 7F 42 00 02 05 00 F7
+text "Part 1" "E.Piano 1" -> F0 00 20 6B 7F 42 00 02 04 0C 00 50 61 72 74 20 31 00 01 01 00 02 7F 7F 7F 00 03 45 2E 50 69 61 6E 6F 20 31 00 04 01 00 05 7F 7F 7F 00 F7
+text "" "" -> F0 00 20 6B 7F 42 00 02 04 0C 00 00 01 01 00 02 7F 7F 7F 00 03 00 04 01 00 05 7F 7F 7F 00 F7
+text "0123456789012345678901" "Été" -> F0 00 20 6B 7F 42 00 02 04 0C 00 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 36 37 00 01 01 00 02 7F 7F 7F 00 03 3F 74 3F 00 04 01 00 05 7F 7F 7F 00 F7
+value knob 100 "Volume" "100" -> F0 00 20 6B 7F 42 00 02 04 1C 00 31 30 30 00 01 56 6F 6C 75 6D 65 00 02 64 00 03 01 00 04 7F 7F 7F 00 F7
+value fader 300 "Part 1 volume" "127" -> F0 00 20 6B 7F 42 00 02 04 1D 00 31 32 37 00 01 50 61 72 74 20 31 20 76 6F 6C 75 6D 65 00 02 7F 00 03 01 00 04 7F 7F 7F 00 F7
+pad 0 127 0 64 -> F0 00 20 6B 7F 42 04 02 03 52 7F 00 40 00 F7
+pad 11 1 2 3 -> F0 00 20 6B 7F 42 04 02 03 5D 01 02 03 00 F7
+pad 12 1 2 3 -> none
+# Main encoder CC 116 (65 clockwise, 63 counter-clockwise), click CC 117
+decode 0 B0 74 41 -> encoder 0 65 1
+decode 1 B0 74 3F -> encoder 0 63 -1
+decode 2 B0 74 40 -> swallowed 0 64 0
+decode 3 B0 75 7F -> click 0 1 0
+decode 4 B0 75 00 -> click 0 0 0
+# Encoders 1-9 are relative: CC 91 92 94 95 96 97 102 103 104
+decode 10 B0 5B 41 -> knob 0 65 1
+decode 11 B0 5C 41 -> knob 1 65 1
+decode 12 B0 5E 41 -> knob 2 65 1
+decode 13 B0 5F 41 -> knob 3 65 1
+decode 14 B0 60 41 -> knob 4 65 1
+decode 15 B0 61 41 -> knob 5 65 1
+decode 16 B0 66 41 -> knob 6 65 1
+decode 17 B0 67 41 -> knob 7 65 1
+decode 18 B0 68 41 -> knob 8 65 1
+decode 20 B0 5B 3F -> knob 0 63 -1
+decode 21 B0 5B 40 -> swallowed 0 64 0
+decode 22 B0 5B 44 -> knob 0 68 4
+decode 23 B0 5D 41 -> none 0 0 0
+decode 24 B0 65 41 -> none 0 0 0
+# Faders 1-9: CC 105-113
+decode 30 B0 69 05 -> fader 0 5 0
+decode 31 B0 71 06 -> fader 8 6 0
+decode 32 B0 72 06 -> none 0 0 0
+# Transport CC 20-26, Back CC 40, eight context buttons CC 45-52 (soft 1-8 are codes 8-15)
+decode 40 B0 14 7F -> button 26 1 0
+decode 41 B0 15 7F -> button 25 1 0
+decode 42 B0 16 7F -> button 27 1 0
+decode 43 B0 18 7F -> button 28 1 0
+decode 44 B0 19 7F -> button 29 1 0
+decode 45 B0 1A 00 -> button 30 0 0
+decode 46 B0 28 7F -> button 31 1 0
+decode 47 B0 2D 7F -> button 8 1 0
+decode 48 B0 34 00 -> button 15 0 0
+decode 49 B0 35 7F -> none 0 0 0
+# Pads: notes 0-11 on channel 10
+decode 50 99 00 64 -> pad 0 100 0
+decode 51 89 00 40 -> pad 0 0 0
+decode 52 99 0B 01 -> pad 11 1 0
+decode 53 99 0C 64 -> none 0 0 0
+decode 54 90 00 64 -> none 0 0 0
+# Keys play
+decode 60 90 3C 64 -> none 0 0 0
+decode 61 E0 00 40 -> none 0 0 0
+decode 62 B0 01 40 -> none 0 0 0
+decode 63 B0 40 7F -> none 0 0 0
+
+# ------------------------------------------------------- KeyLab (first generation)
+# Facts from the KeyLab manual and observation. One cable, no mode.
+
+model "KeyLab 25"
+usb 1C75 0205 "KeyLab 25"
+port "KeyLab 25" keys+controls+display
+model "KeyLab 49"
+usb 1C75 0245 "KeyLab 49"
+port "KeyLab 49 MIDI 1" keys+controls+display
+model "KeyLab 88"
+usb 1C75 02CD "KeyLab 88"
+port "KeyLab 88 MIDI" keys+controls+display
+port "KeyLab 88 DAW" none
+port "KeyLab 61" none
+usb 1C75 02C5 none
+
+none "KeyLab"
+none "KeyLab 37"
+model "KeyLab 61"
+usb 1C75 0285 "KeyLab 61"
+port "KeyLab 61" keys+controls+display
+port "KeyLab 61 MIDI 1" keys+controls+display
+port "KeyLab 61 MIDI" keys+controls+display
+port "KeyLab 61 MIDI 2" none
+port "KeyLab mkII 61" none
+port "KeyLab 61 mk3" none
+port "Arturia KeyLab Essential 61" none
+cable 0 keys+controls+display
+cable 1 none
+connect -> F0 00 20 6B 7F 42 02 00 40 02 01 F7
+disconnect -> F0 00 20 6B 7F 42 04 00 60 01 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+text "Part 1" "E.Piano 1" -> F0 00 20 6B 7F 42 04 00 60 01 50 61 72 74 20 31 20 20 20 20 20 20 20 20 20 20 00 02 45 2E 50 69 61 6E 6F 20 31 20 20 20 20 20 20 20 00 F7
+text "" "" -> F0 00 20 6B 7F 42 04 00 60 01 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+text "Été" "0123456789012345678901234567890123" -> F0 00 20 6B 7F 42 04 00 60 01 3F 74 3F 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 00 F7
+value knob 100 "Volume" "100" -> F0 00 20 6B 7F 42 04 00 60 01 56 6F 6C 75 6D 65 20 20 20 20 20 20 20 20 20 20 00 02 31 30 30 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+pad 0 127 0 0 -> F0 00 20 6B 7F 42 02 00 10 70 7F F7
+pad 15 0 0 1 -> F0 00 20 6B 7F 42 02 00 10 7F 7F F7
+pad 5 0 0 0 -> F0 00 20 6B 7F 42 02 00 10 75 00 F7
+pad 16 127 127 127 -> none
+
+# Param encoder CC 112 / Value encoder CC 114: relative, binary offset around 64, one step per message; clicks CC 113 / 115
+decode 0 B0 70 41 -> encoder 0 65 1
+decode 1 B0 70 3F -> encoder 0 63 -1
+decode 2 B0 70 40 -> swallowed 0 64 0
+decode 3 B0 72 44 -> encoder 0 68 4
+decode 4 B0 72 3E -> encoder 0 62 -2
+decode 5 B0 71 7F -> click 0 1 0
+decode 6 B0 71 00 -> click 0 0 0
+decode 7 B0 73 7F -> click 0 1 0
+decode 8 B1 73 00 -> click 0 0 0
+# Encoders by position: 74 71 76 77 93 18 19 16 17 91 (factory defaults of the unit)
+decode 10 B0 4A 05 -> knob 0 5 0
+decode 11 B0 47 06 -> knob 1 6 0
+decode 12 B0 4C 07 -> knob 2 7 0
+decode 13 B0 4D 08 -> knob 3 8 0
+decode 14 B0 5D 09 -> knob 4 9 0
+decode 15 B0 12 0A -> knob 5 10 0
+decode 16 B0 13 0B -> knob 6 11 0
+decode 17 B0 10 0C -> knob 7 12 0
+decode 18 B0 11 0D -> knob 8 13 0
+decode 19 B0 5B 7F -> knob 9 127 0
+decode 20 B0 4A 41 -> knob 0 65 0
+# Faders 1-9: 73 75 79 72 80 81 82 83 85
+decode 30 B0 49 01 -> fader 0 1 0
+decode 31 B0 4B 02 -> fader 1 2 0
+decode 32 B0 4F 03 -> fader 2 3 0
+decode 33 B0 48 04 -> fader 3 4 0
+decode 34 B0 50 05 -> fader 4 5 0
+decode 35 B0 53 06 -> fader 7 6 0
+decode 36 B0 55 07 -> fader 8 7 0
+decode 37 B0 54 07 -> none 0 0 0
+# Pads: notes 36-51 on channel 10; other channels and notes play
+decode 40 99 24 64 -> pad 0 100 0
+decode 41 99 24 00 -> pad 0 0 0
+decode 42 89 33 40 -> pad 15 0 0
+decode 43 99 34 40 -> none 0 0 0
+decode 44 90 24 40 -> none 0 0 0
+# Keys, wheels, pedals play
+decode 50 90 3C 64 -> none 0 0 0
+decode 51 E0 00 40 -> none 0 0 0
+decode 52 B0 40 7F -> none 0 0 0
+decode 53 B0 01 20 -> none 0 0 0
+decode 54 B0 07 20 -> none 0 0 0
+
+
+# ------------------------------------------------ KeyLab Essential (first generation)
+# Facts from the KeyLab Essential manual and observation. Analog Lab map: keys, controls and display on cable 0.
+
+model "Arturia KeyLab Essential 49"
+usb 1C75 024A "KeyLab Essential 49"
+usb 1C75 224A "KeyLab Essential 49"
+model "Arturia KeyLab Essential 88"
+usb 1C75 02CA "KeyLab Essential 88"
+usb 1C75 22CA "KeyLab Essential 88"
+usb 1C75 02CC "KeyLab Essential 88 mk3"
+usb 1C75 22CC none
+port "Arturia KeyLab Essential 88" keys+controls+display
+port "Arturia KeyLab Essential 88 DAW" none
+
+none "KeyLab Essential"
+none "KeyLab Essential 61"
+none "MIDIIN2 (Arturia KeyLab Essenti"
+none "MIDIOUT2 (Arturia KeyLab Essent"
+model "Arturia KeyLab Essential 61"
+usb 1C75 028A "KeyLab Essential 61"
+usb 1C75 228A "KeyLab Essential 61"
+port "Arturia KeyLab Essential 61" keys+controls+display
+port "Arturia KeyLab Essential 61 MIDI 1" keys+controls+display
+port "Arturia KeyLab Essential 61 MID" keys+controls+display
+port "Arturia KeyLab Essential 61 MIDI In" keys+controls+display
+port "Arturia KeyLab Essential 61 DAW" none
+port "Arturia KeyLab Essential 61 MIDI 2" none
+port "Arturia KeyLab Essential 61 DAW In" none
+port "Arturia KeyLab Essential 61 DAW Out" none
+port "Arturia KeyLab Essential 49 DAW" none
+port "KL Essential 61 mk3 MIDI" none
+port "KeyLab 61" none
+port "KeyLab mkII 61 DAW" none
+cable 0 keys+controls+display
+cable 1 none
+cable 2 none
+connect -> none
+disconnect -> F0 00 20 6B 7F 42 04 00 60 01 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+text "Part 1" "E.Piano 1" -> F0 00 20 6B 7F 42 04 00 60 01 50 61 72 74 20 31 20 20 20 20 20 20 20 20 20 20 00 02 45 2E 50 69 61 6E 6F 20 31 20 20 20 20 20 20 20 00 F7
+text "" "" -> F0 00 20 6B 7F 42 04 00 60 01 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+text "Été" "0123456789012345678901234567890123" -> F0 00 20 6B 7F 42 04 00 60 01 3F 74 3F 20 20 20 20 20 20 20 20 20 20 20 20 20 00 02 30 31 32 33 34 35 36 37 38 39 30 31 32 33 34 35 00 F7
+value fader 20 "Volume" "20" -> F0 00 20 6B 7F 42 04 00 60 01 56 6F 6C 75 6D 65 20 20 20 20 20 20 20 20 20 20 00 02 32 30 20 20 20 20 20 20 20 20 20 20 20 20 20 20 00 F7
+pad 0 127 0 64 -> F0 00 20 6B 7F 42 02 00 16 70 1F 00 10 F7
+pad 5 40 80 127 -> F0 00 20 6B 7F 42 02 00 16 75 0A 14 1F F7
+pad 7 3 2 1 -> F0 00 20 6B 7F 42 02 00 16 77 00 00 00 F7
+pad 8 1 2 3 -> none
+
+# Jog: CC 114 ("Preset" lit) or 112 ("Category" lit), offset binary around 64; click CC 115 / 113
+decode 0 B0 72 41 -> encoder 0 65 1
+decode 1 B0 72 3F -> encoder 0 63 -1
+decode 2 B0 72 40 -> swallowed 0 64 0
+decode 3 B0 70 43 -> encoder 0 67 3
+decode 4 B0 70 3E -> encoder 0 62 -2
+decode 5 B0 73 7F -> click 0 1 0
+decode 6 B0 73 00 -> click 0 0 0
+decode 7 B0 71 7F -> click 0 1 0
+# Buttons are CCs on channel 1 (prev 1, next 2, category 3, preset 4, part1 5, part2 6, live 7)
+decode 10 B0 74 7F -> button 3 1 0
+decode 11 B0 74 00 -> button 3 0 0
+decode 12 B0 75 7F -> button 4 1 0
+decode 13 B0 1C 7F -> button 1 1 0
+decode 14 B0 1D 7F -> button 2 1 0
+decode 15 B0 16 7F -> button 5 1 0
+decode 16 B0 17 7F -> button 6 1 0
+decode 17 B0 18 7F -> button 7 1 0
+# Knobs 1-9: CC 74, 71, 76, 77, 93, 18, 19, 16, 17
+decode 20 B0 4A 10 -> knob 0 16 0
+decode 21 B0 47 20 -> knob 1 32 0
+decode 22 B0 4C 01 -> knob 2 1 0
+decode 23 B0 4D 05 -> knob 3 5 0
+decode 24 B0 5D 01 -> knob 4 1 0
+decode 25 B0 12 02 -> knob 5 2 0
+decode 26 B0 13 02 -> knob 6 2 0
+decode 27 B0 10 03 -> knob 7 3 0
+decode 28 B0 11 03 -> knob 8 3 0
+# Faders 1-9: CC 73, 75, 79, 72, 80, 81, 82, 83, 85
+decode 30 B0 49 7F -> fader 0 127 0
+decode 31 B0 4B 01 -> fader 1 1 0
+decode 32 B0 4F 01 -> fader 2 1 0
+decode 33 B0 48 01 -> fader 3 1 0
+decode 34 B0 50 02 -> fader 4 2 0
+decode 35 B0 53 02 -> fader 7 2 0
+decode 36 B0 55 03 -> fader 8 3 0
+# Pads 1-8: notes 36-43 on channel 10
+decode 37 99 24 64 -> pad 0 100 0
+decode 38 99 2B 01 -> pad 7 1 0
+decode 39 89 24 00 -> pad 0 0 0
+# Keys (channel 1, also notes 36-43), pad notes beyond 8, wheels and other channels play
+decode 40 90 24 64 -> none 0 0 0
+decode 41 99 2C 64 -> none 0 0 0
+decode 42 B0 01 40 -> none 0 0 0
+decode 43 E0 00 40 -> none 0 0 0
+decode 44 B1 72 41 -> none 0 0 0
+decode 45 B0 3C 01 -> none 0 0 0
