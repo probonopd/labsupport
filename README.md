@@ -1,7 +1,9 @@
 # labsupport
 
-Use Arturia MiniLab 3 and KeyLab keyboard controllers with a display as the
-control panel of an application. The library
+labsupport lets software interact with Arturia KeyLab and MiniLab devices
+through their displays, encoders, buttons and faders: an application shows its
+own text and values on the device's display and is controlled by the device's
+encoders, buttons, knobs, faders and pads. The library
 
 * identifies a device and its ports by MIDI port name or USB vendor/product ID,
 * tells which port carries the keys, which the controls and which takes the
