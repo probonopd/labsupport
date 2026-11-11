@@ -91,8 +91,11 @@ A complete sketch (the MIDI calls stand for your MIDI API):
     if (n) send_sysex(display_out, buf, n);
 
 Every writer returns the number of bytes put into the buffer, or 0 when the
-buffer is too small or the device has no such feature. `CS_SYSEX_MAX` is always
-enough. A result may hold several SysEx messages back to back.
+buffer is too small or the device has no such feature. **Always pass a buffer of
+`CS_SYSEX_MAX` bytes**: it is always enough, and only with it does 0 reliably
+mean "this device has no such feature". A smaller buffer (64 bytes, say) silently
+loses longer messages such as some devices' connect sequences. A result may hold
+several SysEx messages back to back; send them as they are.
 
 ## Using it from Java or Android
 
